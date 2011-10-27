@@ -1,3 +1,15 @@
+How to build the Hacked version
+===============================
+
+- checkout the ispn_hack branch
+- import to eclipse (as existing project)
+- build (in eclipse)
+- export (right-click on project) >  Export ... > Plug-in Development > Eclipse product > (set the correct paths) > Finish
+- edit myres/eclipse.ini to contain correct paths
+- overwrite the output folder with myres/eclipse.ini and myres/libjnetpcap.so
+- run as superuser using the eclipse binary in the output folder
+
+
 JGroupsAnalyser
 ===============
 	by Francois Billard <francois@alyseo.com>

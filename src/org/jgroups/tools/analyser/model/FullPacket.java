@@ -8,7 +8,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -208,7 +207,7 @@ public class FullPacket {
 //		if((port == 514) || (buf != null && buf.length > 0)) {
 		if(buf != null && buf.length > 0) {
 			short version = (short) ((buf[0] << 8) + buf[1]);
-			return port == 514 || version == 0x1280 || version == 0x12C0 || version == 0x1301 ;  // support JGroups version 2.10 2.11, 2.12
+			return port == 514 || version == 0x1280 || version == 0x12C0 || version == 0x1301 || version == 0x1800 ;  // support JGroups version 2.10 2.11, 2.12
 		} else {
 			return false;
 		}
@@ -261,8 +260,8 @@ public class FullPacket {
 					desc.append(h);
 					if(h instanceof PingHeader) {
 						PingHeader pingHeader = (PingHeader)h;
-						PingData data = pingHeader.arg;
-						if(data.getView() != null) {
+						PingData data = pingHeader.data;
+						if(data != null && data.getView() != null) {
 							desc.append("\n -> PING_DATA : (" + data.getView().size()+ " members in view) " );
 						} else {
 							desc.append("\n -> PING_DATA : view is null");

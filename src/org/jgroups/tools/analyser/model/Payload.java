@@ -1,9 +1,6 @@
 package org.jgroups.tools.analyser.model;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectStreamClass;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -12,16 +9,16 @@ import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
 import org.apache.xbean.classloader.JarFileClassLoader;
+import org.infinispan.marshall.StreamingMarshaller;
 import org.jgroups.tools.analyser.Activator;
 import org.jgroups.tools.analyser.util.Util;
-import org.jgroups.util.ExposedByteArrayInputStream;
 
 public class Payload {
-
+      private static StreamingMarshaller marshaller = new MarshallerProvider().getMarshaller();
 	public static String treatment = Activator.getDefault().getPreferenceStore().getString("PAYLOAD");
 	public static String jarPath = Activator.getDefault().getPreferenceStore().getString("JAR_PATH");
 	public static JarFileClassLoader classLoader = null;
-	
+
 	public static void setClassLoader() {
 		File dependencyDirectory = new File(jarPath);
 		if(new File(jarPath).exists()) {
@@ -103,29 +100,42 @@ public class Payload {
 	}
 	
 	private String unSerialize(byte[] objectBinary) {
-		String result = null;
-		if(classLoader == null) {
-			setClassLoader();
-		}
-		try {
-			ExposedByteArrayInputStream ex = new ExposedByteArrayInputStream(objectBinary, 1, objectBinary.length -1);
-
-			ObjectInputStream in = new ObjectInputStream(ex) {
-				protected Class<?> resolveClass(ObjectStreamClass desc)	throws IOException, ClassNotFoundException {
-					return classLoader.loadClass(desc.getName());
-				}
-			};
-			Object o = in.readObject();
-			result = o.toString();
-
-		} catch (Exception e) {
-			errorMsg = e.getMessage();
-		} catch(NoClassDefFoundError n) {
-			errorMsg = "class not found : " + n.getMessage() + ", you should update the preferences JAR path";
-		}
-		return result; 
-		
+		return unSerializeInfinispan(objectBinary);
+//		if(classLoader == null) {
+//			setClassLoader();
+//		}
+//		try {
+//			ExposedByteArrayInputStream ex = new ExposedByteArrayInputStream(objectBinary, 1, objectBinary.length -1);
+//
+//			ObjectInputStream in = new ObjectInputStream(ex) {
+//				protected Class<?> resolveClass(ObjectStreamClass desc)	throws IOException, ClassNotFoundException {
+//					return classLoader.loadClass(desc.getName());
+//				}
+//			};
+//			Object o = in.readObject();
+//			result = o.toString();
+//
+//		} catch (Exception e) {
+//			errorMsg = e.getMessage();
+//		} catch(NoClassDefFoundError n) {
+//			errorMsg = "class not found : " + n.getMessage() + ", you should update the preferences JAR path";
+//		}
+//		return result; 
 	}
+
+   private String unSerializeInfinispan(byte[] objectBinary) {
+      try {
+         Object obj = marshaller.objectFromByteBuffer(objectBinary);
+         if (obj == null) {
+            return null;
+         }
+         return obj.toString();
+      } catch (Exception e) {
+         errorMsg = e.getMessage();
+         return null;
+      }
+   }
+
 	
 	public String toString() {
 		if( errorMsg != null && ! errorMsg.isEmpty()) {
